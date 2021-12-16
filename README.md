@@ -1,2 +1,2 @@
 # Diffusion-based-Segmentation
-This is the official Pytorch implementation of the paper "Diffusion Models for Implicit Image Segmentation Ensembles".
+Here, we will provide the official Pytorch implementation of the paper "Diffusion Models for Implicit Image Segmentation Ensembles".
