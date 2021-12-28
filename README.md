@@ -59,7 +59,7 @@ For sampling an ensemble of 5 segmentation masks with the DDPM approach, run:
 ```
 python scripts/segmentation_sample.py  --data_dir ./data/testing  --model_path ./results/savedmodel.pt --num_ensemble=5 $MODEL_FLAGS $DIFFUSION_FLAGS
 ```
-The generated segmentation masks will be stored in the *results* folder.
+The generated segmentation masks will be stored in the *results* folder. A visualization of the sampling process is done using [Visdom](https://github.com/fossasia/visdom).
 
 ## Citation
 If you use this code, please cite
