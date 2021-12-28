@@ -48,22 +48,20 @@ MODEL_FLAGS="--image_size 256 --num_channels 128 --class_cond False --num_res_bl
 DIFFUSION_FLAGS="--diffusion_steps 1000 --noise_schedule linear --rescale_learned_sigmas False --rescale_timesteps False"
 TRAIN_FLAGS="--lr 1e-4 --batch_size 10"
 ```
-
 To train the segmentation model, run
 
 ```
-python3 scripts/segmentation_train.py --data_dir path/to/BRATS/training $TRAIN_FLAGS $MODEL_FLAGS $DIFFUSION_FLAGS
+python3 scripts/segmentation_train.py --data_dir ./data/training $TRAIN_FLAGS $MODEL_FLAGS $DIFFUSION_FLAGS
 ```
-The model will be save in the *results* folder.
-For sampling an ensemble of 5 segmentation masks from with the DDPM approach, run:
+The model will be saved in the *results* folder.
+For sampling an ensemble of 5 segmentation masks with the DDPM approach, run:
 
 ```
-python scripts/segmentation_sample.py  --data_dir path/to/BRATS/testing  --model_path ./results/savedmodel.pt --num_ensemble=5 $MODEL_FLAGS $DIFFUSION_FLAGS
+python scripts/segmentation_sample.py  --data_dir ./data/testing  --model_path ./results/savedmodel.pt --num_ensemble=5 $MODEL_FLAGS $DIFFUSION_FLAGS
 ```
-
 The generated segmentation masks will be stored in the *results* folder.
 
-##Citation
+## Citation
 If you use this code, please cite
 
 ```
