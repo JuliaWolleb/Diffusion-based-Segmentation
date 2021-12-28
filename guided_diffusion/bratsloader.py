@@ -46,7 +46,6 @@ class BRATSDataset(torch.utils.data.Dataset):
         filedict = self.database[x]
         for seqtype in self.seqtypes:
             nib_img = nibabel.load(filedict[seqtype])
-            print('path', filedict[seqtype])
             path=filedict[seqtype]
             out.append(torch.tensor(nib_img.get_fdata()))
         out = torch.stack(out)

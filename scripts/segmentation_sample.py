@@ -43,8 +43,6 @@ def dice_score(pred, targs):
 
 def main():
     args = create_argparser().parse_args()
-   #result0=th.load('./Bratssliced/validation/000246/result0')
-  #  print('loadedresult0', result0.shape)
     dist_util.setup_dist()
     logger.configure()
 
@@ -60,7 +58,6 @@ def main():
         shuffle=False)
     data = iter(datal)
     all_images = []
-    all_labels = []
     model.load_state_dict(
         dist_util.load_state_dict(args.model_path, map_location="cpu")
     )
@@ -69,19 +66,16 @@ def main():
         model.convert_to_fp16()
     model.eval()
     while len(all_images) * args.batch_size < args.num_samples:
-        img, path = next(data)  #should return an image from the dataloader "data"
-     #   c = th.randn_like(b[:, :1, ...])
-       # img = th.cat((b, c), dim=1)     #add a noise channel$
-        print('path', path)
+        b, path = next(data)  #should return an image from the dataloader "data"
+        c = th.randn_like(b[:, :1, ...])
+        img = th.cat((b, c), dim=1)     #add a noise channel$
         slice_ID=path[0].split("/", -1)[3]
 
-        cond = {}
         viz.image(visualize(img[0,0,...]), opts=dict(caption="img input0"))
         viz.image(visualize(img[0, 1, ...]), opts=dict(caption="img input1"))
         viz.image(visualize(img[0, 2, ...]), opts=dict(caption="img input2"))
         viz.image(visualize(img[0, 3, ...]), opts=dict(caption="img input3"))
-        # viz.image(visualize(img[0, 4, ...]), opts=dict(caption="img input4"))
-
+        viz.image(visualize(img[0, 4, ...]), opts=dict(caption="img input4"))
 
         logger.log("sampling...")
 
@@ -107,9 +101,8 @@ def main():
             print('time for 1 sample', start.elapsed_time(end))  #time measurement for the generation of 1 sample
 
             s = th.tensor(sample)
-            mask = th.where(sample > 0.5, 1, 0)
             viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
-            th.save(s, './results/generated_masks/'+str(slice_ID)+'_output'+str(i)) #save the generated mask
+            th.save(s, './results/'+str(slice_ID)+'_output'+str(i)) #save the generated mask
 
 def create_argparser():
     defaults = dict(

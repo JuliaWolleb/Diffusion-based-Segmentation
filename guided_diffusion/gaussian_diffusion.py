@@ -1,7 +1,6 @@
 """
 This code started out as a PyTorch port of Ho et al's diffusion models:
 https://github.com/hojonathanho/diffusion/blob/1e0dceb3b3495bbe19116a5e1b3596cd0706c543/diffusion_tf/diffusion_utils_2.py
-
 Docstrings have been added, as well as DDIM sampling and a new collection of beta schedules.
 """
 from torch.autograd import Variable
@@ -29,7 +28,6 @@ def standardize(img):
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps):
     """
     Get a pre-defined beta schedule for the given name.
-
     The beta schedule library consists of beta schedules which remain similar
     in the limit of num_diffusion_timesteps.
     Beta schedules may be added, but should not be removed or changed once
@@ -57,7 +55,6 @@ def betas_for_alpha_bar(num_diffusion_timesteps, alpha_bar, max_beta=0.999):
     """
     Create a beta schedule that discretizes the given alpha_t_bar function,
     which defines the cumulative product of (1-beta) over time from t = [0,1].
-
     :param num_diffusion_timesteps: the number of betas to produce.
     :param alpha_bar: a lambda that takes an argument t from 0 to 1 and
                       produces the cumulative product of (1-beta) up to that
@@ -86,7 +83,6 @@ class ModelMeanType(enum.Enum):
 class ModelVarType(enum.Enum):
     """
     What is used as the model's output variance.
-
     The LEARNED_RANGE option has been added to allow the model to predict
     values between FIXED_SMALL and FIXED_LARGE, making its job easier.
     """
@@ -112,10 +108,8 @@ class LossType(enum.Enum):
 class GaussianDiffusion:
     """
     Utilities for training and sampling diffusion models.
-
     Ported directly from here, and then adapted over time to further experimentation.
     https://github.com/hojonathanho/diffusion/blob/1e0dceb3b3495bbe19116a5e1b3596cd0706c543/diffusion_tf/diffusion_utils_2.py#L42
-
     :param betas: a 1-D numpy array of betas for each diffusion timestep,
                   starting at T and going to 1.
     :param model_mean_type: a ModelMeanType determining what the model outputs.
@@ -182,7 +176,6 @@ class GaussianDiffusion:
     def q_mean_variance(self, x_start, t):
         """
         Get the distribution q(x_t | x_0).
-
         :param x_start: the [N x C x ...] tensor of noiseless inputs.
         :param t: the number of diffusion steps (minus 1). Here, 0 means one step.
         :return: A tuple (mean, variance, log_variance), all of x_start's shape.
@@ -199,9 +192,7 @@ class GaussianDiffusion:
     def q_sample(self, x_start, t, noise=None):
         """
         Diffuse the data for a given number of diffusion steps.
-
         In other words, sample from q(x_t | x_0).
-
         :param x_start: the initial data batch.
         :param t: the number of diffusion steps (minus 1). Here, 0 means one step.
         :param noise: if specified, the split-out normal noise.
@@ -219,9 +210,7 @@ class GaussianDiffusion:
     def q_posterior_mean_variance(self, x_start, x_t, t):
         """
         Compute the mean and variance of the diffusion posterior:
-
             q(x_{t-1} | x_t, x_0)
-
         """
         assert x_start.shape == x_t.shape
         posterior_mean = (
@@ -247,7 +236,6 @@ class GaussianDiffusion:
         """
         Apply the model to get p(x_{t-1} | x_t), as well as a prediction of
         the initial x, x_0.
-
         :param model: the model, which takes a signal and a batch of timesteps
                       as input.
         :param x: the [N x C x ...] tensor at time t.
@@ -374,7 +362,6 @@ class GaussianDiffusion:
         computes the gradient of a conditional log probability with respect to
         x. In particular, cond_fn computes grad(log(p(y|x))), and we want to
         condition on y.
-
         This uses the conditioning strategy from Sohl-Dickstein et al. (2015).
         """
         a, gradient = cond_fn(x, self._scale_timesteps(t),org,  **model_kwargs)
@@ -389,9 +376,7 @@ class GaussianDiffusion:
         """
         Compute what the p_mean_variance output would have been, should the
         model's score function be conditioned by cond_fn.
-
         See condition_mean() for details on cond_fn.
-
         Unlike condition_mean(), this instead uses the conditioning strategy
         from Song et al (2020).
         """
@@ -425,7 +410,6 @@ class GaussianDiffusion:
     ):
         """
         Sample x_{t-1} from the model at the given timestep.
-
         :param model: the model to sample from.
         :param x: the current tensor at x_{t-1}.
         :param t: the value of t, starting at 0 for the first diffusion step.
@@ -471,7 +455,6 @@ class GaussianDiffusion:
     ):
         """
         Generate samples from the model.
-
         :param model: the model module.
         :param shape: the shape of the samples, (N, C, H, W).
         :param noise: if specified, the noise from the encoder to sample.
@@ -517,7 +500,6 @@ class GaussianDiffusion:
         model_kwargs=None,
         device=None,
         progress=False,
-        conditioning=False,
         conditioner = None,
         classifier=None
     ):
@@ -540,16 +522,11 @@ class GaussianDiffusion:
             model_kwargs=model_kwargs,
             device=device,
             progress=progress,
-            conditioning=conditioning,
-            conditioner=conditioner,
-            classifier=classifier
         ):
             final = sample
-        if conditioning:
-            return final["sample"], x_noisy, org
-        else:
 
-            return final["sample"], x_noisy, img
+
+        return final["sample"], x_noisy, img
 
     def p_sample_loop_progressive(
         self,
@@ -568,7 +545,6 @@ class GaussianDiffusion:
         """
         Generate samples from the model and yield intermediate samples from
         each timestep of diffusion.
-
         Arguments are the same as p_sample_loop().
         Returns a generator over dicts, where each dict is the return value of
         p_sample().
@@ -607,10 +583,7 @@ class GaussianDiffusion:
                         t,
                         clip_denoised=clip_denoised,
                         denoised_fn=denoised_fn,
-                        cond_fn=cond_fn,
-                        org=org,
                         model_kwargs=model_kwargs,
-                        update_eps=True
                     )
                     yield out
                     img = out["sample"]
@@ -628,7 +601,6 @@ class GaussianDiffusion:
     ):
         """
         Sample x_{t-1} from the model using DDIM.
-
         Same usage as p_sample().
         """
         out = self.p_mean_variance(
@@ -768,7 +740,6 @@ class GaussianDiffusion:
     ):
         """
         Generate samples from the model using DDIM.
-
         Same usage as p_sample_loop().
         """
         final = None
@@ -860,7 +831,6 @@ class GaussianDiffusion:
         """
         Use DDIM to sample from the model and yield intermediate samples from
         each timestep of DDIM.
-
         Same usage as p_sample_loop_progressive().
         """
         if device is None:
@@ -904,10 +874,8 @@ class GaussianDiffusion:
     ):
         """
         Get a term for the variational lower-bound.
-
         The resulting units are bits (rather than nats, as one might expect).
         This allows for comparison to other papers.
-
         :return: a dict with the following keys:
                  - 'output': a shape [N] tensor of NLLs or KLs.
                  - 'pred_xstart': the x_0 predictions.
@@ -939,7 +907,6 @@ class GaussianDiffusion:
     def training_losses_segmentation(self, model, classifier, x_start, t, model_kwargs=None, noise=None):
         """
         Compute training losses for a single timestep.
-
         :param model: the model to evaluate loss on.
         :param x_start: the [N x C x ...] tensor of inputs.
         :param t: a batch of timestep indices.
@@ -1013,9 +980,7 @@ class GaussianDiffusion:
         """
         Get the prior KL term for the variational lower-bound, measured in
         bits-per-dim.
-
         This term can't be optimized, as it only depends on the encoder.
-
         :param x_start: the [N x C x ...] tensor of inputs.
         :return: a batch of [N] KL values (in bits), one per batch element.
         """
@@ -1031,13 +996,11 @@ class GaussianDiffusion:
         """
         Compute the entire variational lower-bound, measured in bits-per-dim,
         as well as other related quantities.
-
         :param model: the model to evaluate loss on.
         :param x_start: the [N x C x ...] tensor of inputs.
         :param clip_denoised: if True, clip denoised samples.
         :param model_kwargs: if not None, a dict of extra keyword arguments to
             pass to the model. This can be used for conditioning.
-
         :return: a dict containing the following keys:
                  - total_bpd: the total variational lower-bound, per batch element.
                  - prior_bpd: the prior term in the lower-bound.
@@ -1089,7 +1052,6 @@ class GaussianDiffusion:
 def _extract_into_tensor(arr, timesteps, broadcast_shape):
     """
     Extract values from a 1-D numpy array for a batch of indices.
-
     :param arr: the 1-D numpy array.
     :param timesteps: a tensor of indices into the array to extract.
     :param broadcast_shape: a larger shape of K dimensions with the batch

@@ -185,11 +185,6 @@ class TrainLoop:
                     # reinitialize data loader
                     data_iter = iter(self.dataloader)
                     batch, cond = next(data_iter)
-           # viz.image(visualize(batch[0, 0, ...]), opts=dict(caption="batch0"))
-            # viz.image(visualize(batch[0, 1, ...]), opts=dict(caption="batch1"))
-            # viz.image(visualize(batch[0, 2, ...]), opts=dict(caption="batch2"))
-            # viz.image(visualize(batch[0, 3, ...]), opts=dict(caption="batch3"))
-            # viz.image(visualize(cond[0, 0, ...]), opts=dict(caption="cond0"))
 
             self.run_step(batch, cond)
 
@@ -198,22 +193,7 @@ class TrainLoop:
             totseg += lossseg;
             totcls += losscls
             totrec += lossrec
-            if i % 10 == 0:
-                viz.line(X=th.ones((1, 1)).cpu() * i, Y=th.Tensor([totcls]).unsqueeze(0).cpu(),
-                         win=loss_window, name='loss_vb',
-                         update='append')
-                viz.line(X=th.ones((1, 1)).cpu() * i, Y=th.Tensor([totseg]).unsqueeze(0).cpu(),
-                         win=loss_window, name='loss_seg',
-                         update='append')
-                viz.line(X=th.ones((1, 1)).cpu() * i, Y=th.Tensor([totrec]).unsqueeze(0).cpu(),
-                         win=loss_window, name='loss_rec',
-                         update='append')
-                totseg = 0
-                totcls = 0
-                totrec=0
 
-            if i % 200 == 0:
-                viz.image(visualize(sample[0, 0, ...]), opts=dict(caption="sampled output"))
 
             if self.step % self.log_interval == 0:
                 logger.dumpkvs()
@@ -244,14 +224,11 @@ class TrainLoop:
         self.mp_trainer.zero_grad()
         for i in range(0, batch.shape[0], self.microbatch):
             micro = batch[i : i + self.microbatch].to(dist_util.dev())
-        #    micro_cond = cond[i: i + self.microbatch].to(dist_util.dev())
             micro_cond = {
                 k: v[i : i + self.microbatch].to(dist_util.dev())
                 for k, v in cond.items()
             }
 
-          #  viz.image(visualize(batch[0,0, ...]), opts=dict(caption="micro"))
-           # viz.image(visualize(batch[0,4, ...]), opts=dict(caption="micro_cond"))
             last_batch = (i + self.microbatch) >= batch.shape[0]
             t, weights = self.schedule_sampler.sample(micro.shape[0], dist_util.dev())
 
@@ -280,8 +257,8 @@ class TrainLoop:
 
             loss = (losses["loss"] * weights).mean()
             lossseg = (losses["mse"] * weights).mean().detach()
-            losscls = (losses["vb"] * weights).mean().detach()#0.1*( (losses["cls2"] * weights).mean().detach()+(losses["cls3"] * weights).mean().detach())
-            lossrec =loss*0#10*( (losses["rec1"] * weights).mean().detach()+(losses["rec2"] * weights).mean().detach())
+            losscls = (losses["vb"] * weights).mean().detach()
+            lossrec =loss*0
 
             log_loss_dict(
                 self.diffusion, t, {k: v * weights for k, v in losses.items()}
