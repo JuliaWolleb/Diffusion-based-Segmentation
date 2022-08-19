@@ -168,9 +168,6 @@ class TrainLoop:
 
     def run_loop(self):
         i = 0
-        totseg = 0
-        totcls = 0
-        totrec=0
         data_iter = iter(self.dataloader)
         while (
             not self.lr_anneal_steps
@@ -188,13 +185,9 @@ class TrainLoop:
 
             self.run_step(batch, cond)
 
-            lossseg, losscls, lossrec, sample = self.run_step(batch, cond)
+            sample = self.run_step(batch, cond)
             i += 1
-            totseg += lossseg;
-            totcls += losscls
-            totrec += lossrec
-
-
+          
             if self.step % self.log_interval == 0:
                 logger.dumpkvs()
             if self.step % self.save_interval == 0:
@@ -211,13 +204,13 @@ class TrainLoop:
         batch=th.cat((batch, cond), dim=1)
 
         cond={}
-        lossseg, losscls, lossrec, sample = self.forward_backward(batch, cond)
+        sample = self.forward_backward(batch, cond)
         took_step = self.mp_trainer.optimize(self.opt)
         if took_step:
             self._update_ema()
         self._anneal_lr()
         self.log_step()
-        return lossseg, losscls, lossrec, sample
+        return sample
 
     def forward_backward(self, batch, cond):
 
@@ -256,15 +249,12 @@ class TrainLoop:
             sample = losses1[1]
 
             loss = (losses["loss"] * weights).mean()
-            lossseg = (losses["mse"] * weights).mean().detach()
-            losscls = (losses["vb"] * weights).mean().detach()
-            lossrec =loss*0
 
             log_loss_dict(
                 self.diffusion, t, {k: v * weights for k, v in losses.items()}
             )
             self.mp_trainer.backward(loss)
-            return lossseg.detach(), losscls.detach(), lossrec.detach(), sample
+            return  sample
 
     def _update_ema(self):
         for rate, params in zip(self.ema_rate, self.ema_params):
