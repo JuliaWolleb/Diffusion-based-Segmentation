@@ -185,7 +185,7 @@ class TrainLoop:
 
             self.run_step(batch, cond)
 
-            sample = self.run_step(batch, cond)
+           
             i += 1
           
             if self.step % self.log_interval == 0:
